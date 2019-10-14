@@ -120,6 +120,12 @@ function setScore(value, destination) {
 // Functions below this line are specific to a given week
 // ------------------------------------------------------
 
+function addMeasurement() {
+  var sheet = SpreadsheetApp.openByUrl("https://docs.google.com/spreadsheets/d/18AHHVxc5YHf3pWKFcumS0Ut3vYjAqk96EVGUS4Rrl6A/edit").getSheets()[0];
+  var date = new Date();
+  sheet.appendRow([date.toLocaleString(),0]);
+}
+
 START = new Date("10/12/2019");
 
 function getDay() {
