@@ -1,0 +1,5 @@
+**/.git**
+.clasp.json
+.gitignore
+.gitattributes
+LICENSE
