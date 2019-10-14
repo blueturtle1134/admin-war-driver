@@ -103,6 +103,20 @@ function hourly() {
   }
 }
 
+function getScores() {
+  var data = SpreadsheetApp.openByUrl("https://docs.google.com/spreadsheets/d/1BZYB3tvqrVfwKceXdJZMhdSI_kEOQtn1B5NGJjSfLVA/edit#gid=0").getSheets()[0].getDataRange().getValues();
+  var result = [0, 0, 0];
+  for(var i=0; i<3; i++){
+    result[i] = data[i][0];
+  }
+  return result;
+}
+
+function setScore(value, destination) {
+  var sheet = SpreadsheetApp.openByUrl("https://docs.google.com/spreadsheets/d/1BZYB3tvqrVfwKceXdJZMhdSI_kEOQtn1B5NGJjSfLVA/edit#gid=0").getSheets()[0];
+  sheet.getRange(destination, 1).setValue(value);
+}
+
 // Functions below this line are specific to a given week
 // ------------------------------------------------------
 
@@ -121,190 +135,4 @@ function first() {
 function second() {
   day = getDay();
   driveSend(day+"b.png","Second image for day "+day);
-}
-
-function getScores() {
-  var data = SpreadsheetApp.openByUrl("https://docs.google.com/spreadsheets/d/1BZYB3tvqrVfwKceXdJZMhdSI_kEOQtn1B5NGJjSfLVA/edit#gid=0").getSheets()[0].getDataRange().getValues();
-  var result = [0, 0, 0];
-  for(var i=0; i<3; i++){
-    result[i] = data[i][0];
-  }
-  return result;
-}
-
-function setScore(value, destination) {
-  var sheet = SpreadsheetApp.openByUrl("https://docs.google.com/spreadsheets/d/1BZYB3tvqrVfwKceXdJZMhdSI_kEOQtn1B5NGJjSfLVA/edit#gid=0").getSheets()[0];
-  sheet.getRange(destination, 1).setValue(value);
-}
-
-function checkCode(code, destination) {
-  var range = SpreadsheetApp.openByUrl("https://docs.google.com/spreadsheets/d/1XX-nmvd0Efw8RGEpLo0SFoOWpDKwBnyDFfgrRsHSkBI/edit").getSheets()[0].getDataRange();
-  var data = range.getValues();
-  var lower = code.toLowerCase();
-  for(var i = 0; i<data.length; i++) {
-    if(data[i][0].toLowerCase() == lower) {
-      if(data[i][destination] != 1) {
-        scores = getScores();
-        send("**"+NAMES[destination]+"** has claimed code **#"+(i+1)+"** and now has **"+(scores[destination-1]+1)+"** points!", 0);
-        send("**"+data[i][0]+"** has been claimed.", destination);
-        setScore(scores[destination-1]+1, destination);
-        data[i][destination] = 1;
-        range.setValues(data);
-        return;
-      }
-      else{
-        send("Your team has already claimed code #"+(i+1), destination);
-        return;
-      }
-    }
-  }
-  send("**"+lower+"** is invalid.", destination);
-}
-
-function countCode() {
-  var range = SpreadsheetApp.openByUrl("https://docs.google.com/spreadsheets/d/1XX-nmvd0Efw8RGEpLo0SFoOWpDKwBnyDFfgrRsHSkBI/edit").getSheets()[0].getDataRange();
-  var data = range.getValues();
-  send("There are currently **"+data.length+"** codes active.", 0)
-}
-
-function battleship() {
-  var range = SpreadsheetApp.openByUrl("https://docs.google.com/spreadsheets/d/1pCrCKXG5rPLpx4TsdrDIbM8NPs5h5Ik66cQ_p4SVKzw/edit").getSheets()[0].getDataRange();
-  var data = range.getValues();
-  var shots = readShots();
-  result="Evaluating "+shots.length+" shot(s)";
-  for(var i = 0; i<shots.length; i++){
-    var shot = shots[i];
-    if(data[shot[0]][shot[1]] >= 0){
-      if(data[shot[0]][shot[1]] == 0){
-        data[shot[0]][shot[1]] = -1;
-        result += "\n**"+shot[2]+"** is a **miss**";
-      }
-      else{
-        result += "\n**"+shot[2]+"** is a **hit**";
-        data[shot[0]][shot[1]] = -2;
-      }
-    }
-  }
-  Logger.log(shots);
-  Logger.log(data);
-  Logger.log(result);
-  range.setValues(data);
-  send(result+getMap(data, 4),4,"DRADIS");
-  send(getMap(data, 1),1,"DRADIS");
-  send(getMap(data, 2),2,"DRADIS");
-  send(getMap(data, 3),3,"DRADIS");
-}
-
-function readShots() {
-  var body = DocumentApp.openByUrl("https://docs.google.com/document/d/1sguJyBx2i8VGvOgVs83HdWg8LubX3iHdcRhoSSIhF_w/edit").getBody();
-  var paragraphs = body.getParagraphs();
-  var regex = new RegExp("\\w\\d+");
-  var result = [];
-  for(var i = 0; i<paragraphs.length; i++){
-    var text = paragraphs[i].getText();
-    if(regex.test(text)){
-      var a = "ABCDEFGHIJKLMNOP".indexOf(text.charAt(0));
-      var b = text.substring(1)-1;
-      result.push([b,a,text]);
-      body.removeChild(paragraphs[i]);
-    }
-  }
-  return result;
-}
-
-function getMap(data, destination) {
-  var result = "```   A B C D E F G H I J K L M N O P";
-  var hp = [0,0,0];
-  for(var i = 0; i<data.length; i++){
-    result += "\n"+(i+1);
-    if(i<9){
-      result += " ";
-    }
-    for(var j = 0; j<data[i].length; j++){
-      result += " ";
-      if(data[i][j] == -2){
-        result += "X";
-      }
-      else if (data[i][j] == -1){
-        result += "+";
-      }
-      else if (destination == 5){
-        switch(data[i][j]){
-          case 1:
-            result += "R";
-            break;
-          case 2:
-            result += "E";
-            break;
-          case 3:
-            result += "C";
-            break;
-          default:
-            result += "·";
-        }
-      }
-      else if (data[i][j] == destination && destination != 0){
-        result += "O";
-      }
-      else{
-        result += "·";
-      }
-      if(data[i][j]>0){
-        hp[data[i][j]-1] += 1;
-      }
-    }
-  }
-  result+="```";
-  for(var i=0; i<3; i++){
-    if(destination == i+1 || destination == 5) {
-      result+="\n"+NAMES[i+1]+" health: **"+hp[i]+"**";
-    }
-  }
-  return result;
-}
-
-function sendChallenge(destination) {
-  var position = getScores()[destination-1]; //The one they've just finished, 1 indexed
-  var startMessage = "";
-  if(position > 0){
-    startMessage += "**You have finished Door "+position+"**";
-  }
-  var next = readRegex(position);
-  if(next == null){
-    send(startMessage+"\nThat's the last Door for now.",destination);
-  }
-  else{
-    setScore(position+1,destination);
-    startMessage += "\n**Beginning Door "+(position+1)+"**";
-    var regexArray = readRegex(position);
-    var regex = regexArray[0];
-    var words = regexArray[1].split(" ");
-    evaluate(words,regex,destination,startMessage+"\n");
-  }
-}
-
-function evaluate(strings,regex,destination,message){
-  var re = new RegExp(regex);
-  var result = message;
-  for(var i=0; i<strings.length; i++){
-    string = strings[i].toLowerCase();
-    if(re.test(string)){
-      result += string+" **passes** this door.\n";
-      message = string+" passes this door.";
-    }
-    else{
-      result += string+" **does not pass** this door.\n";
-      message = string+" does not pass this door.";
-    }
-  }
-  send(result.substring(0, result.length-1),destination);
-}
-
-function readRegex(i) {
-  var body = DocumentApp.openByUrl("https://docs.google.com/document/d/1KDnIQh_W3xjhrwpyUJ47Rgs0o5Ju1wFhCEvwdQnQANI/edit").getBody();
-  var paragraphs = body.getParagraphs();
-  if(paragraphs.length < i*2+1) {
-    return null;
-  }
-  return [paragraphs[i*2].getText(),paragraphs[i*2+1].getText()];
 }
