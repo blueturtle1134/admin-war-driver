@@ -8,7 +8,8 @@ HOOKS = ["https://discordapp.com/api/webhooks/625193379147415582/SwEX_X5Z0PbnDNT
 NAMES = ["Everybody",
          "Cryusade",
          "Eristocracy",
-         "Chronspiracy"]
+         "Chronspiracy",
+        "Jackasses"]
 
 DRIVE_URL = "https://drive.google.com/uc?export=download&id="
 
@@ -19,7 +20,7 @@ Dial 0 for everyone.
 1 for Cryusade
 2 for Eristocracy
 3 for Chronspiracy
-4 for the Battleship channel
+4 for the Battleship channel/Jackasses
 5 for the Tower
 This is how it goes even if "everyone" doesn't make sense.
 */
@@ -75,9 +76,8 @@ function driveSend(filename, message) {
 }
 
 function test() {
-  for(var i = 0; i<24; i++){
-    Logger.log(prob(1.0/24.0));
-  }
+  send("This is yet another test run.",0);
+  daily();
 }
 
 function doGet(e) {
@@ -94,12 +94,19 @@ function prob(n){
 }
 
 function daily() {
-  send("Measurement (Daily) - last poster gets a point.");
+  send("Measurement (Daily) - last poster gets a point.",5);
+  addMeasurement();
+  Logger.log("Daily fired.");
 }
 
 function hourly() {
-  if(prob(1.0/24.0)){
-    send("Measurement (Random) - last poster gets a point.");
+  if(prob(1.0/12.0)){
+    send("Measurement (Random) - last poster gets a point.",5);
+    addMeasurement();
+    Logger.log("Hourly chosen.");
+  }
+  else{
+    Logger.log("Hourly not chosen.");
   }
 }
 
@@ -123,7 +130,29 @@ function setScore(value, destination) {
 function addMeasurement() {
   var sheet = SpreadsheetApp.openByUrl("https://docs.google.com/spreadsheets/d/18AHHVxc5YHf3pWKFcumS0Ut3vYjAqk96EVGUS4Rrl6A/edit").getSheets()[0];
   var date = new Date();
-  sheet.appendRow([date.toLocaleString(),0]);
+  sheet.appendRow([date.toLocaleString(),0,1]);
+}
+
+function checkMeasurement() {
+  var data = SpreadsheetApp.openByUrl("https://docs.google.com/spreadsheets/d/18AHHVxc5YHf3pWKFcumS0Ut3vYjAqk96EVGUS4Rrl6A/edit").getSheets()[0].getDataRange().getValues();
+  var scores = [0,0,0,0,0];
+  var number = [0,0,0,0,0];
+  for(var i = 0; i<data.length; i++){
+    scores[data[i][1]] += data[i][2];
+    number[data[i][1]] += 1;
+  }
+  var results = "**Current scores:** \n";
+  for(var i = 1; i<5; i++){
+    results+="\nThe "+NAMES[i]+" has **"+scores[i]+"** point(s)";
+    if(number[i]!=scores[i]){
+      results+=", including **"+(scores[i]-number[i])+"** bonus point(s).";
+    }
+  }
+  results+="\n"+scores[0]+" point(s) have not yet been evaluated.";
+  if(number[0]!=scores[0]){
+      results+=" (including "+(scores[0]-number[0])+" bonus point(s).)";
+    }
+  send(results, 0);
 }
 
 START = new Date("10/12/2019");
