@@ -9,7 +9,7 @@ NAMES = ["Everybody",
          "Cryusade",
          "Eristocracy",
          "Chronspiracy",
-        "Jackasses"]
+        "Codeman and IMPP show"]
 
 DRIVE_URL = "https://drive.google.com/uc?export=download&id="
 
